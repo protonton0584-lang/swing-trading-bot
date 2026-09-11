@@ -1,29 +1,28 @@
-name: Daily Swing Trading Bot
+import os
+import requests
 
-on:
-  schedule:
-    - cron: '0 23 * * 1-5'
-  workflow_dispatch:
+def send_line_message(message):
+    token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
+    user_id = os.environ.get("LINE_USER_ID")
+    
+    if not token or not user_id:
+        print("Error: LINE credentials not found.")
+        return
+        
+    url = "https://api.line.me/v2/bot/message/push"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}"
+    }
+    payload = {
+        "to": user_id,
+        "messages": [{"type": "text", "text": message}]
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    print(f"LINE API Response Status: {response.status_code}")
+    print(response.text)
 
-jobs:
-  run-bot:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          pip install yfinance pandas numpy requests
-
-      - name: Run trading bot
-        env:
-          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
-        run: |
-          python main.py
+if __name__ == "__main__":
+    print("Sending test message to LINE...")
+    send_line_message("【テスト通知】GitHub Actionsからの接続テスト成功です！")
